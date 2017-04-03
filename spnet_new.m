@@ -41,15 +41,15 @@ function [] = spnet_new()
   exp_tau = 105; 
 
   %Decay Rates
-  lambda_L1 = [ones(L1_Ne,1) * 0.2];
-  lambda_L2 = [ones(L2_Ne,1) * 0.2];
-  lambda_L3 = [ones(L3_Ne,1) * 0.2];
+  lambda_L1 = [ones(L1_Ne,1) * 0.02];
+  lambda_L2 = [ones(L2_Ne,1) * 0.02];
+  lambda_L3 = [ones(L3_Ne,1) * 0.02];
 
   %Neuron Config Details
   I = 1; %nA
   C = 1; %nF
   R = 40; %M Ohms
-  Vth = 10;  %Spike Threshold
+  Vth = 5;  %Spike Threshold
 
   %Refractory Periods for each neuron
   ref_period = 5;
@@ -97,10 +97,10 @@ function [] = spnet_new()
     if (j == 1)
       %For all the input neurons, introduce spikes
       for i=1:L1_Ne
-        [spike_exists_L1(i),Vmem_L1(i),
+        [spike_exists_L1(i),Vmem_L1(i), ...
         ref_cnt_L1(i), cnt_L1(i)] = neuron(zeros(1,L1_Ne), zeros(1,M_L1), zeros(1,M_L1), Vth,
                                            Vmem_L1(i),ref_cnt_L1(i),lambda_L1(i), inp(i), 
-                                           synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i), 
+                                           synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i),
                                            cnt_max);
       end
     else
@@ -112,7 +112,7 @@ function [] = spnet_new()
       %%%%%%%%%%%
       %Iterate over all neurons in layer 2
       for i=1:L2_Ne
-        [nxt_spike_exists_L2(i), Vmem_L2(i), 
+        [nxt_spike_exists_L2(i), Vmem_L2(i), ...
         ref_cnt_L2(i), cnt_L2(i)] = neuron(spike_exists_L1, synapses_L1toL2(:,i)',
                                            weights_L1toL2(:,i)',Vth, Vmem_L2(i), 
                                            ref_cnt_L2(i), lambda_L2(i), inp(i), 0, 0,
@@ -121,7 +121,7 @@ function [] = spnet_new()
 
       %Iterate over all neurons in layer 3
       for i=1:L3_Ne
-        [nxt_spike_exists_L3(i),Vmem_L3(i),
+        [nxt_spike_exists_L3(i),Vmem_L3(i), ...
         ref_cnt_L3(i), cnt_L3(i)] = neuron(spike_exists_L2, synapses_L2toL3(:,i)', 
                                            weights_L2toL3(:,i)', Vth, Vmem_L3(i), ref_cnt_L3(i),
                                            lambda_L3(i), inp(i), 0, 0, cnt_L3(i), cnt_max);
@@ -193,7 +193,7 @@ function [] = spnet_new()
       %%%%%%%%%%%
 
       for i=1:L1_Ne
-        [spike_exists_L1(i),Vmem_L1(i),
+        [spike_exists_L1(i),Vmem_L1(i), ...
          ref_cnt_L1(i), cnt_L1(i)] = neuron(zeros(L1_Ne,1), zeros(1,M_L1), zeros(1,M_L1), Vth,
                                             Vmem_L1(i),ref_cnt_L1(i),lambda_L1(i), inp(i), 
                                             synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i), 
@@ -234,6 +234,9 @@ function [spike, Vout, ref, counter_out] = neuron (spike_exists, synapses, syn_w
                                       ref_in, lambda, spike_exists_ext, synapses_ext, 
                                       syn_weights_ext, counter, counter_max)
 
+  %Scaling factor for increasing membrane potentials
+  sc_factor = 0.8;
+                                        
   if ~ref_in
     %Vout = Vin - (Vin/(R*C)) + (I/C);
     temp = 0;
@@ -242,14 +245,14 @@ function [spike, Vout, ref, counter_out] = neuron (spike_exists, synapses, syn_w
       %The spike_exists, synapses, and syn_weights are only for the layer that you are interested in
       %For example, if you are looking at a neuron in L2, the spike_exists contains if spike exists in neurons
       %in L1
-      temp = temp + spike_exists(i)*synapses(i)*syn_weights(i);
+      temp = temp + spike_exists(i)*synapses(i)*syn_weights(i)*sc_factor;
     end
 
     %This temp2 calculation is for the external stimulation (mainly for inputs)
     %The spike_exists, synapses, and syn_weights are only for the layer that you are interested in
     %For example, if you are looking at a neuron in L2, the spike_exists contains if spike exists in neurons
     %in L1
-    temp2 = temp2 + spike_exists_ext*synapses_ext*syn_weights_ext;
+    temp2 = temp2 + spike_exists_ext*synapses_ext*syn_weights_ext*sc_factor;
 
     Vout = Vin + temp - lambda + temp2;
     ref = ref_in;
@@ -258,18 +261,19 @@ function [spike, Vout, ref, counter_out] = neuron (spike_exists, synapses, syn_w
     Vout = 0.2*V_th; % reset voltage
   end
      
-  if (Vin > V_th && Vout ~= 0.2*V_th)
+  if (Vout > V_th && Vout ~= 0.2*V_th)
     Vout = 50;  % emit spike
     spike = 1;
     counter_out = counter_max;
     % ref = abs_ref; % set refractory counter
   else
     spike = 0;
-    if (counter > 0)
-      counter_out = counter - counter*exp(-1);
-    else
-      counter_out = counter;
-    end
+  end
+
+  if (counter > 0)
+    counter_out = counter - counter*exp(-1);
+  else
+    counter_out = counter;
   end
 
 end
