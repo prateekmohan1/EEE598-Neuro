@@ -71,10 +71,7 @@ function [] = spnet_new()
   raster_L2 = [zeros(iteration_count,L2_Ne)];
   raster_L3 = [zeros(iteration_count,L3_Ne)];
   
-  %VmemPlot Data
-  Vmem_pl_L1 = [zeros(iteration_count,L1_Ne)];
-  Vmem_pl_L2 = [zeros(iteration_count,L2_Ne)];
-  Vmem_pl_L3 = [zeros(iteration_count,L3_Ne)];
+  
   
   %Test input
   inp = [ones(L1_Ne,1)];
@@ -115,7 +112,6 @@ function [] = spnet_new()
                                            synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i),...
                                            cnt_max);
       end
-      Vmem_pl_L1(j,:) = Vmem_L1;
     else
       %At this point, you are not in your first iteration. So, spikes have been created in L1 due
       %to inputs inserted
@@ -225,10 +221,6 @@ function [] = spnet_new()
     raster_L1(j,:) = spike_exists_L1;
     raster_L2(j,:) = spike_exists_L2;
     raster_L3(j,:) = spike_exists_L3;
-    
-    Vmem_pl_L1(j,:) = Vmem_L1;
-    Vmem_pl_L2(j,:) = Vmem_L2;
-    Vmem_pl_L3(j,:) = Vmem_L3;
     
   end
 
