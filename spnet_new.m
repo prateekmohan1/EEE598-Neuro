@@ -8,6 +8,11 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
   L3_Ne = 10;
   L2_Ni = 5;
   N_t = L1_Ne + L2_Ne + L3_Ne;
+  
+  %Load the MNIST database
+  load mnist_uint8;
+  test_x  = double(test_x)  / 255;
+  test_y  = double(test_y);
 
   %Number of Synapses in input to L1
   M_inp = L1_Ne;
@@ -130,12 +135,18 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
   Vmem_pl_L2 = [zeros(iteration_count,L2_Ne)];
   Vmem_pl_L3 = [zeros(iteration_count,L3_Ne)];
    
-  %spikeMat = zeros(L1_Ne, iteration_count);
+  %Factor for counter decrementing in L1. The smaller this 
+  %is the slower the decrement.
+  c_factor_L1 = 0.8;
   
+  %spikeMat = zeros(L1_Ne, iteration_count);
+ 
   %spikeMat = poissonSpikeGen(freq_in,iteration_count/1000,1);
  
+  
+  
   %For the total number of tests
-  for totTests=1:3
+  for totTests=1:1
   
       %The second variable says how many seconds I want to run
       %Since iteration count is in ms, convert into s
@@ -165,41 +176,41 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
       for j=1:iteration_count
 
         %If this is the first iteration
-        if (j == 1)
+%         if (j == 1)
           %For all the input neurons, introduce spikes
-          for i=1:L1_Ne
-            [spike_exists_L1(i),Vmem_L1(i), ...
-            ref_cnt_L1(i), cnt_L1(i)] = neuron(zeros(1,L1_Ne), zeros(1,M_L1), zeros(1,M_L1), Vth, ...
-                                               Vmem_L1(i),ref_cnt_L1(i),lambda_L1(i), spikeMat(i,j), ...
-                                               synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i),...
-                                               cnt_max);
-          end
-          Vmem_pl_L1(j,:) = Vmem_L1;
+%           for i=1:L1_Ne
+%             [spike_exists_L1(i),Vmem_L1(i), ...
+%             ref_cnt_L1(i), cnt_L1(i)] = neuron(zeros(1,L1_Ne), zeros(1,M_L1), zeros(1,M_L1), Vth, ...
+%                                                Vmem_L1(i),ref_cnt_L1(i),lambda_L1(i), spikeMat(i,j), ...
+%                                                synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i),...
+%                                                cnt_max);
+%           end
+%           Vmem_pl_L1(j,:) = Vmem_L1;
+%           
+%           %%%%%%%%%%%%%%%%%%%%
+%           %%Update Synapse weights for L1
+%           %%%%%%%%%%%%%%%%%%%%
+%           
+%           if (mode == 1)
+%               %Iterate over all L1 neurons
+%               for i=1:L1_Ne
+%                 %If a spike exists in L1
+%                 if (spike_exists_L1(i))
+%                   %Set the refractory rate
+%                   ref_cnt_L1(i) = ref_period;
+%                   %Iterate over all rows in L2 which are post-syn (LTD)
+%                   for k=1:L2_Ne
+%                     %If a synapse connection exists between L1 and L2
+%                     if (synapses_L1toL2(i,k) == 1)
+%                       weights_L1toL2(i,k) = synapse_calc_post(cnt_max, cnt_L2(k), weights_L1toL2(i,k),  ...
+%                                                                 exp_tau_LTD);
+%                     end
+%                   end
+%                 end
+%               end              
+%           end
           
-          %%%%%%%%%%%%%%%%%%%%
-          %%Update Synapse weights for L1
-          %%%%%%%%%%%%%%%%%%%%
-          
-          if (mode == 1)
-              %Iterate over all L1 neurons
-              for i=1:L1_Ne
-                %If a spike exists in L1
-                if (spike_exists_L1(i))
-                  %Set the refractory rate
-                  ref_cnt_L1(i) = ref_period;
-                  %Iterate over all rows in L2 which are post-syn (LTD)
-                  for k=1:L2_Ne
-                    %If a synapse connection exists between L1 and L2
-                    if (synapses_L1toL2(i,k) == 1)
-                      weights_L1toL2(i,k) = synapse_calc_post(cnt_max, cnt_L2(k), weights_L1toL2(i,k),  ...
-                                                                exp_tau_LTD);
-                    end
-                  end
-                end
-              end              
-          end
-          
-        else
+%         else
           %At this point, you are not in your first iteration. So, spikes have been created in L1 due
           %to inputs inserted
 
@@ -208,61 +219,85 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
           %Calculate L1's membrane potentials
           %%%%%%%%%%%
 
+%           for i=1:L1_Ne
+%             [nxt_spike_exists_L1(i),Vmem_L1(i), ...
+%              ref_cnt_L1(i), cnt_L1(i)] = neuron(zeros(L1_Ne,1), zeros(1,M_L1), zeros(1,M_L1), Vth, ...
+%                                                 Vmem_L1(i),ref_cnt_L1(i),lambda_L1(i), spikeMat(i,j),  ...
+%                                                 synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i),  ...
+%                                                 cnt_max);
+%           end
+% 
+%           %%%%%%%%%%%%%%%%%%%%
+%           %%Update Synapse weights for L1
+%           %%%%%%%%%%%%%%%%%%%%
+%           
+%           if (mode == 1)
+%               %Iterate over all L1 neurons
+%               for i=1:L1_Ne
+%                 %If a spike exists in L1
+%                 if (nxt_spike_exists_L1(i))
+%                   %Set the refractory rate
+%                   ref_cnt_L1(i) = ref_period;
+%                   %Iterate over all rows in L2 which are post-syn (LTD)
+%                   for k=1:L2_Ne
+%                     %If a synapse connection exists between L1 and L2
+%                     if (synapses_L1toL2(i,k) == 1)
+%                       unnweights_L1toL2(i,k) = synapse_calc_post(cnt_max, cnt_L2(k), weights_L1toL2(i,k),  ...
+%                                                                 exp_tau_LTD);
+%                     end
+%                   end
+%                 end
+%               end
+%               
+%               %Normalize weights
+%               [weights_L1toL2] = normalize_weights(unnweights_L1toL2, weights_L1toL2);
+%               
+%           end
+
+          %Set counters for L1 to be at max if there is a spike
           for i=1:L1_Ne
-            [nxt_spike_exists_L1(i),Vmem_L1(i), ...
-             ref_cnt_L1(i), cnt_L1(i)] = neuron(zeros(L1_Ne,1), zeros(1,M_L1), zeros(1,M_L1), Vth, ...
-                                                Vmem_L1(i),ref_cnt_L1(i),lambda_L1(i), spikeMat(i,j),  ...
-                                                synapses_inptoL1(i), weights_inptoL1(i), cnt_L1(i),  ...
-                                                cnt_max);
-          end
-
-          %%%%%%%%%%%%%%%%%%%%
-          %%Update Synapse weights for L1
-          %%%%%%%%%%%%%%%%%%%%
-          
-          if (mode == 1)
-              %Iterate over all L1 neurons
-              for i=1:L1_Ne
-                %If a spike exists in L1
-                if (nxt_spike_exists_L1(i))
-                  %Set the refractory rate
-                  ref_cnt_L1(i) = ref_period;
-                  %Iterate over all rows in L2 which are post-syn (LTD)
-                  for k=1:L2_Ne
-                    %If a synapse connection exists between L1 and L2
-                    if (synapses_L1toL2(i,k) == 1)
-                      unnweights_L1toL2(i,k) = synapse_calc_post(cnt_max, cnt_L2(k), weights_L1toL2(i,k),  ...
-                                                                exp_tau_LTD);
-                    end
-                  end
-                end
+              if (spikeMat(i,j) == 1)
+                 cnt_L1(i) = cnt_max; 
               end
-              
-              %Normalize weights
-              [weights_L1toL2] = normalize_weights(unnweights_L1toL2, weights_L1toL2);
-              
           end
-
+          
+          %If you are at least on the second iteration, you can start
+          %decreasing the counters
+          if (j > 1)
+             for i=1:L1_Ne
+                 if (cnt_L1(i) > 0)
+                     cnt_L1(i) = cnt_L1(i) - cnt_L1(i)*exp(-1/c_factor_L1);
+                 elseif (cnt_L1(i) <= 0)
+                     cnt_L1(i) = 0;
+                 end                           
+             end
+          end
+          
           %%%%%%%%%%%
           %Calculate Membrane Potentials for L2
           %%%%%%%%%%%
           %Iterate over all neurons in layer 2
           for i=1:L2_Ne
+%             [nxt_spike_exists_L2(i), Vmem_L2(i), ...
+%             ref_cnt_L2(i), cnt_L2(i)] = neuron(spike_exists_L1, synapses_L1toL2(:,i)', ...
+%                                                weights_L1toL2(:,i)',Vth, Vmem_L2(i), ...
+%                                                ref_cnt_L2(i), lambda_L2(i), spikeMat(i,j), 0, 0, ...
+%                                                cnt_L2(i), cnt_max);
             [nxt_spike_exists_L2(i), Vmem_L2(i), ...
-            ref_cnt_L2(i), cnt_L2(i)] = neuron(spike_exists_L1, synapses_L1toL2(:,i)', ...
+            ref_cnt_L2(i), cnt_L2(i)] = neuron(spikeMat(:,j), synapses_L1toL2(:,i)', ...
                                                weights_L1toL2(:,i)',Vth, Vmem_L2(i), ...
                                                ref_cnt_L2(i), lambda_L2(i), spikeMat(i,j), 0, 0, ...
-                                               cnt_L2(i), cnt_max);
+                                               cnt_L2(i), cnt_max);                                                
                                            
             %Inhibitory section - if a neuron spiked, forcibly reduce all
             %the other Vmems by a small amount
-            if (Vmem_L2(i) == 50)
-               for remNeu=1:L2_Ne
-                   if (remNeu ~= i)
-                       [Vmem_L2(remNeu)] = decPot(Vmem_L2(remNeu), decAmount); 
-                   end
-               end
-            end
+%             if (Vmem_L2(i) == 50)
+%                for remNeu=1:L2_Ne
+%                    if (remNeu ~= i)
+%                        [Vmem_L2(remNeu)] = decPot(Vmem_L2(remNeu), decAmount); 
+%                    end
+%                end
+%             end
           end
 
           %%%%%%%%%%%%%%%%%%%%
@@ -414,7 +449,7 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
           spike_exists_L3 = nxt_spike_exists_L3;
           spike_exists_L1 = nxt_spike_exists_L1;
 
-        end
+%         end
 
         raster_L1(j,:) = spike_exists_L1;
         raster_L2(j,:) = spike_exists_L2;
