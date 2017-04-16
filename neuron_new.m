@@ -1,4 +1,4 @@
-function [Vout] = neuron_new (spike_exists, synapses, syn_weights, Vin,  ...
+function [Vout, ref] = neuron_new (spike_exists, synapses, syn_weights, Vin,  ...
                                       ref_in, lambda)
 
   %Scaling factor for increasing membrane potentials, the larger this the
@@ -17,7 +17,9 @@ function [Vout] = neuron_new (spike_exists, synapses, syn_weights, Vin,  ...
       end 
     end
     Vout = Vin + temp - lambda;
+    ref = ref_in;
   else
+    ref = ref_in - 1;
     Vout = 0; % reset voltage
   end
     

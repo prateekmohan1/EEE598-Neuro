@@ -163,12 +163,9 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
       %Iterate over all neurons in layer 2
       for ii=1:size(inp_image,1)
           for i=1:L2_Ne
-            [nxt_spike_exists_L2(i), Vmem_L2(i), ...
-            ref_cnt_L2(i), cnt_L2(i)] = neuron(inp_image(ii,:), synapses_L1toL2(:,i)', ...
-                                               weights_L1toL2(:,i)',Vth, Vmem_L2(i), ...
-                                               ref_cnt_L2(i), lambda_L2(i), 0, 0, 0, ...
-                                               cnt_L2(i), cnt_max);                                                
-
+            [Vmem_L2(i), ref_cnt_L2(i)] = neuron_new (inp_image(ii,:), synapses_L1toL2(:,i)', ... 
+                                            weights_L1toL2(:,i)', Vmem_L2(i),  ...
+                                            ref_cnt_L2(i), lambda_L2(i));
           end
       
           %Check for spikes
@@ -190,10 +187,9 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
 
           %Iterate over all neurons in layer 3
           for i=1:L3_Ne
-            [spike_exists_L3(i),Vmem_L3(i), ...
-            ref_cnt_L3(i), cnt_L3(i)] = neuron(spike_exists_L2, synapses_L2toL3(:,i)',  ...
-                                               weights_L2toL3(:,i)', Vth, Vmem_L3(i), ref_cnt_L3(i), ...
-                                               lambda_L3(i), 0, 0, 0, cnt_L3(i), cnt_max);
+            [Vmem_L3(i), ref_cnt_L3(i)] = neuron_new (spike_exists_L2, synapses_L2toL3(:,i)', ... 
+                                            weights_L2toL3(:,i)', Vmem_L3(i),  ...
+                                            ref_cnt_L3(i), lambda_L3(i));              
           end
 
           %Check for spikes
@@ -209,18 +205,6 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
           
           totalSpikes_L3(ii,:) = totalSpikes_L3(ii,:) + spike_exists_L3';
           
-      %%%%%%%%%%
-      %Assign spikes for next iteration
-      %%%%%%%%%%
-
-%       raster_L1(j,:) = spike_exists_L1;
-%       raster_L2(j,:) = spike_exists_L2;
-%       raster_L3(j,:) = spike_exists_L3;
-% 
-%       Vmem_pl_L1(j,:) = Vmem_L1;
-%       Vmem_pl_L2(j,:) = Vmem_L2;
-%       Vmem_pl_L3(j,:) = Vmem_L3;
-
         %Set all the Vmems to 0
         Vmem_L2 = [zeroes(L2_Ne,1) * (-65)];
         Vmem_L3 = [zeroes(L3_Ne,1) * (-65)];
@@ -228,74 +212,6 @@ function [weights_L1toL2, weights_L2toL3, freqout, sum_L3_out] = spnet_new(mode,
       end
 
   end
-
-%       raster_L1 = raster_L1';
-%       raster_L2 = raster_L2';
-%       raster_L3 = raster_L3';
-% 
-%       raster_L1 = logical(raster_L1);
-%       raster_L2 = logical(raster_L2);
-%       raster_L3 = logical(raster_L3);
-% 
-%       for i=1:L1_Ne
-%          sum_L1 = [sum_L1; sum(raster_L1(i,:))]; 
-%       end
-% 
-%       for i=1:L2_Ne
-%          sum_L2 = [sum_L2; sum(raster_L2(i,:))]; 
-%       end  
-% 
-%       for i=1:L3_Ne
-%          sum_L3 = [sum_L3; sum(raster_L3(i,:))]; 
-%       end
-% 
-%       sum_L1_out = [sum_L1_out sum_L1];
-%       sum_L2_out = [sum_L2_out sum_L2];
-%       sum_L3_out = [sum_L3_out sum_L3];      
-      
-%       sum_L1 = [];
-%       sum_L2 = [];
-%       sum_L3 = [];
-%       
-%       raster_L1 = [];
-%       raster_L2 = [];
-%       raster_L3 = [];
-%       
-%       %Null out the Vmems and the counters
-%       Vmem_L1 = [ones(L1_Ne,1) * (-65)];
-%       Vmem_L2 = [ones(L2_Ne,1) * (-65)];
-%       Vmem_L3 = [ones(L3_Ne,1) * (-65)];
-%       cnt_L1 = [zeros(L1_Ne,1)*cnt_max];
-%       cnt_L2 = [zeros(L1_Ne,1)*cnt_max];
-%       cnt_L3 = [zeros(L1_Ne,1)*cnt_max];
-      
-  
-  
-%   figure;
-%   plotRaster(raster_L1, tVec);
-%   xlabel('Time (ms)');
-%   ylabel('Trial Number');
-%   title('L1');
-%   figure;
-%   plotRaster(raster_L2, tVec);
-%   xlabel('Time (ms)');
-%   ylabel('Trial Number');
-%   title('L2');
-%   figure;
-%   plotRaster(raster_L3, tVec);
-%   xlabel('Time (ms)');
-%   ylabel('Trial Number');
-%   title('L3');
-
-  %Plot L3
-%   for j=1:iteration_count
-%       for i=1:L3_Ne
-%           scatter(j,raster_L2(j,i))
-%       end
-%   end
-%   
-  
-  %plot(test2)
 
 end
 
@@ -377,7 +293,7 @@ function [Vout] = decPot (Vin,decAmt)
 
 end
 
-function [Vout] = neuron_new (spike_exists, synapses, syn_weights, Vin,  ...
+function [Vout, ref] = neuron_new (spike_exists, synapses, syn_weights, Vin,  ...
                                       ref_in, lambda)
 
   %Scaling factor for increasing membrane potentials, the larger this the
@@ -391,15 +307,18 @@ function [Vout] = neuron_new (spike_exists, synapses, syn_weights, Vin,  ...
       %The spike_exists, synapses, and syn_weights are only for the layer that you are interested in
       %For example, if you are looking at a neuron in L2, the spike_exists contains if spike exists in neurons
       %in L1
-      temp = temp + spike_exists(i)*synapses(i)*syn_weights(i)*sc_factor;
+      if (spike_exists(i) && synapses(i))
+          temp = temp + syn_weights(i)*sc_factor;
+      end 
     end
     Vout = Vin + temp - lambda;
+    ref = ref_in;
   else
+    ref = ref_in - 1;
     Vout = 0; % reset voltage
   end
     
 end
-
 
 function [spike, Vout, ref, counter_out] = neuron (spike_exists, synapses, syn_weights, V_th, Vin,  ...
                                       ref_in, lambda, spike_exists_ext, synapses_ext,  ...
