@@ -1,0 +1,31 @@
+<html>
+<body>
+<script src="resources/eml_report_loadable_data.js"></script>
+<pre class="code">
+<span class="srcline"><span class="lineno"><a href="1,1" id="srcline1"> 1</a></span><span class="line"><span class="keyword">function</span> [<span class="var type1" id="S2T1U3">Vout</span>] = neuron_new (<span class="var type1" id="S3T2U6">spike_exists</span>, <span class="var type1" id="S4T2U7">synapses</span>, <span class="var type1" id="S5T3U8">syn_weights</span>, <span class="var type1" id="S6T1U9">Vin</span>,  <span class="keyword">...</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,2" id="srcline2"> 2</a></span><span class="line">                                      <span class="var type1" id="S7T1U10">ref_in</span>, <span class="var type1" id="S8T1U11">lambda</span>)</span></span>
+<span class="srcline"><span class="lineno"><a href="1,3" id="srcline3"> 3</a></span><span class="line"></span></span>
+<span class="srcline"><span class="lineno"><a href="1,4" id="srcline4"> 4</a></span><span class="line">  <span class="comment">%Scaling factor for increasing membrane potentials, the larger this the</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,5" id="srcline5"> 5</a></span><span class="line">  <span class="comment">%larger the membrane increase</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,6" id="srcline6"> 6</a></span><span class="line">  <span class="mxinfo " id="T1:U8"><span class="var type1" id="S9T1U14">sc_factor</span> = <span class="mxinfo " id="T1:U10">1.0</span></span>;</span></span>
+<span class="srcline"><span class="lineno"><a href="1,7" id="srcline7"> 7</a></span><span class="line">                                        </span></span>
+<span class="srcline"><span class="lineno"><a href="1,8" id="srcline8"> 8</a></span><span class="line">  <span class="keyword">if</span> <span class="mxinfo " id="T4:U11">~<span class="var type1" id="S7T1U19">ref_in</span></span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,9" id="srcline9"> 9</a></span><span class="line">    <span class="comment">%Vout = Vin - (Vin/(R*C)) + (I/C);</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,10" id="srcline10">10</a></span><span class="line">    <span class="mxinfo " id="T1:U13"><span class="var type1" id="S10T1U22">temp</span> = <span class="mxinfo " id="T1:U15">0</span></span>;</span></span>
+<span class="srcline"><span class="lineno"><a href="1,11" id="srcline11">11</a></span><span class="line">    <span class="keyword">for</span> <span class="var type1" id="S11T1U26">i</span> = <span class="mxinfo " id="T1:U17">1</span>:<span class="mxinfo " id="T1:U18">size(<span class="var type1" id="S4T2U31">synapses</span>,2)</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,12" id="srcline12">12</a></span><span class="line">      <span class="comment">%The spike_exists, synapses, and syn_weights are only for the layer that you are interested in</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,13" id="srcline13">13</a></span><span class="line">      <span class="comment">%For example, if you are looking at a neuron in L2, the spike_exists contains if spike exists in neurons</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,14" id="srcline14">14</a></span><span class="line">      <span class="comment">%in L1</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,15" id="srcline15">15</a></span><span class="line">      <span class="keyword">if</span> (<span class="mxinfo " id="T4:U20"><span class="var type1" id="S3T2U38">spike_exists</span>(<span class="var type1" id="S11T1U39">i</span>)</span> &amp;&amp; <span class="mxinfo " id="T4:U23"><span class="var type1" id="S4T2U41">synapses</span>(<span class="var type1" id="S11T1U42">i</span>)</span>)</span></span>
+<span class="srcline"><span class="lineno"><a href="1,16" id="srcline16">16</a></span><span class="line">          <span class="mxinfo " id="T1:U26"><span class="var type1" id="S10T1U45">temp</span> = <span class="mxinfo " id="T1:U28"><span class="var type1" id="S10T1U47">temp</span> + <span class="mxinfo " id="T1:U30"><span class="mxinfo " id="T1:U31"><span class="var type1" id="S5T3U50">syn_weights</span>(<span class="var type1" id="S11T1U51">i</span>)</span>*<span class="var type1" id="S9T1U52">sc_factor</span></span></span></span>;</span></span>
+<span class="srcline"><span class="lineno"><a href="1,17" id="srcline17">17</a></span><span class="line">      <span class="keyword">end</span> </span></span>
+<span class="srcline"><span class="lineno"><a href="1,18" id="srcline18">18</a></span><span class="line">    <span class="keyword">end</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,19" id="srcline19">19</a></span><span class="line">    <span class="mxinfo " id="T1:U35"><span class="var type1" id="S2T1U55">Vout</span> = <span class="mxinfo " id="T1:U37"><span class="mxinfo " id="T1:U38"><span class="var type1" id="S6T1U58">Vin</span> + <span class="var type1" id="S10T1U59">temp</span></span> - <span class="var type1" id="S8T1U60">lambda</span></span></span>;</span></span>
+<span class="srcline"><span class="lineno"><a href="1,20" id="srcline20">20</a></span><span class="line">  <span class="keyword">else</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,21" id="srcline21">21</a></span><span class="line">    <span class="mxinfo " id="T1:U42"><span class="var type1" id="S2T1U64">Vout</span> = <span class="mxinfo " id="T1:U44">0</span></span>; <span class="comment">% reset voltage</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,22" id="srcline22">22</a></span><span class="line">  <span class="keyword">end</span></span></span>
+<span class="srcline"><span class="lineno"><a href="1,23" id="srcline23">23</a></span><span class="line">    </span></span>
+<span class="srcline"><span class="lineno"><a href="1,24" id="srcline24">24</a></span><span class="line"><span class="keyword">end</span></span></span>
+</pre>
+</body>
+</html>
